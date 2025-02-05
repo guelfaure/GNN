@@ -1,0 +1,28 @@
+# PATHS
+train_dataset: ./data_light/data/train
+validation_dataset: ./data_light/data/validation
+predict_dataset: ./data_saved/test
+load_model_path: ./CheckPoint/clever_sum_low_readout/ckpt/weights.77-0.197
+output_path: ./
+
+
+# OPTIMIZATION OPTIONS
+loss: BinaryCrossentropy
+optimizer:
+  type: Adam
+  learning_rate:  # define a schedule
+    type: ExponentialDecay
+    initial_learning_rate: 0.0005
+    decay_steps: 80000
+    decay_rate: 0.6
+metrics: [BinaryAccuracy]
+
+# TRAINING OPTIONS
+batch_size: 1
+epochs: 100
+epoch_size: 300
+shuffle_training_set: True
+shuffle_validation_set: True
+val_samples: 10
+val_frequency: 1
+execute_gpu: True

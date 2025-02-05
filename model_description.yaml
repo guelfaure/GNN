@@ -1,0 +1,142 @@
+# Definition of the entities
+entities:
+- name: frontier
+  state_dimension: 32
+  initial_state:
+  - type: build_state
+    input: [$duration, $ressources_needed]
+
+- name: other
+  state_dimension: 32
+  initial_state:
+  - type: build_state
+    input: [$duration_other, $ressources_needed_other]
+
+- name: time
+  state_dimension: 32
+  initial_state:
+  - type: build_state
+    input: [$ressources_available]
+
+
+# Definition of the message passing phase
+message_passing:
+  num_iterations: 8
+  stages:
+    # STAGE 1:
+    - stage_message_passings:
+      - destination_entity: other
+        source_entities:
+          - name: frontier
+            message:
+              - type: direct_assignment
+        aggregation:
+          - type: sum
+        update:
+          type: neural_network
+          nn_name: stage
+
+    # STAGE 2:
+    - stage_message_passings:
+      - destination_entity: frontier
+        source_entities:
+          - name: time
+            message:
+              - type: direct_assignment
+        aggregation:
+          - type: sum
+        update:
+          type: neural_network
+          nn_name: stage
+
+      - destination_entity: other
+        source_entities:
+          - name: time
+            message:
+              - type: direct_assignment
+        aggregation:
+          - type: sum
+        update:
+          type: neural_network
+          nn_name: stage
+
+    # STAGE 4:
+    - stage_message_passings:
+      - destination_entity: time
+        source_entities:
+          - name: frontier
+            message:
+              - type: direct_assignment
+          - name: other
+            message:
+              - type: direct_assignment
+          - name: time
+            message:
+              - type: direct_assignment
+        aggregation:
+          - type: sum
+        update:
+          type: neural_network
+          nn_name: stage
+
+
+    # STAGE 5:
+    - stage_message_passings:
+      - destination_entity: frontier
+        source_entities:
+          - name: time
+            message:
+              - type: direct_assignment
+        aggregation:
+          - type: sum
+        update:
+          type: neural_network
+          nn_name: stage
+
+      - destination_entity: other
+        source_entities:
+          - name: time
+            message:
+              - type: direct_assignment
+        aggregation:
+          - type: sum
+        update:
+          type: neural_network
+          nn_name: stage
+
+    # STAGE 6:
+    - stage_message_passings:
+      - destination_entity: frontier
+        source_entities:
+          - name: other
+            message:
+              - type: direct_assignment
+        aggregation:
+          - type: sum
+        update:
+          type: neural_network
+          nn_name: stage             
+
+# Definition of the readout
+readout:
+- type: neural_network
+  input: [frontier]
+  nn_name: readout_model
+  output_label: [$solution]
+
+# Definition of the Neural Networks
+neural_networks:
+- nn_name: readout_model
+  nn_architecture:
+  - type_layer: Dense
+    units: 32
+    activation: relu
+  - type_layer: Dense
+    units: 1
+    activation: sigmoid
+
+
+- nn_name: stage
+  nn_architecture:
+    - type_layer: GRU
+
